@@ -1,0 +1,274 @@
+<title>Mapa de PULSOTT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una columna de lectura; el diagrama general ocupa todo el ancho y debajo van las piezas que lo explican */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#16202B; --muted:#5A6878; --line:#D6DDE6;
+  --accent:#1F5FBF; --gold:#C98F12;
+  --in:#E4EEFB; --in-b:#5B8FD6; --core:#E7F5EC; --core-b:#3E9A63; --db:#FFF3D9; --db-b:#C98F12; --out:#F1E9FB; --out-b:#8A63C9; --ext:#FDE8E6; --ext-b:#C9584A;
+  --f-display:"Archivo","Segoe UI",system-ui,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171D; --surface:#1A2129; --ink:#E6ECF2; --muted:#93A1B1; --line:#2C3743; --accent:#7FB0F5; --gold:#E6B44A;
+  --in:#1C2C42; --in-b:#5B8FD6; --core:#183025; --core-b:#4FB57A; --db:#33291A; --db-b:#E0A92E; --out:#2A2140; --out-b:#A684DE; --ext:#3A2220; --ext-b:#E07565; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171D; --surface:#1A2129; --ink:#E6ECF2; --muted:#93A1B1; --line:#2C3743; --accent:#7FB0F5; --gold:#E6B44A;
+  --in:#1C2C42; --in-b:#5B8FD6; --core:#183025; --core-b:#4FB57A; --db:#33291A; --db-b:#E0A92E; --out:#2A2140; --out-b:#A684DE; --ext:#3A2220; --ext-b:#E07565; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+header{display:grid;gap:8px}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:700;font-size:1.3rem;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:700;font-size:1rem;margin:0}
+p{margin:0}
+.lead{color:var(--muted);max-width:68ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.85rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:14px;height:14px;border-radius:4px;border:2px solid;display:inline-block}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.diagram{overflow-x:auto}
+.diagram svg{display:block;margin:0 auto;min-width:860px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--accent));border-radius:12px;padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.card ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:.9rem}
+.card code,.mono{font-family:var(--f-mono);font-size:.82rem;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 5px;border-radius:4px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-weight:500;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--in);border:2px solid var(--in-b);color:var(--ink);font-size:.85rem}
+.steps b{font-weight:600}
+.roles{width:100%;border-collapse:collapse;font-size:.9rem}
+.roles th,.roles td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.roles th{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tscroll{overflow-x:auto}
+footer{color:var(--muted);font-size:.82rem}
+/* SVG del diagrama: todo sale de los tokens */
+.dg text{font-family:var(--f-body);fill:var(--ink)}
+.dg .t{font-family:var(--f-display);font-weight:700;font-size:15px}
+.dg .s{font-size:12px;fill:var(--muted)}
+.dg .lane{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;fill:var(--muted)}
+.dg .edge{fill:none;stroke:var(--muted);stroke-width:1.6}
+.dg .edge.hot{stroke:var(--accent);stroke-width:2}
+.dg .edge.ext{stroke:var(--ext-b);stroke-width:2}
+.dg .lab{font-size:11px;fill:var(--muted)}
+.dg .lab.hot{fill:var(--accent);font-weight:600}
+.dg .lab.ext{fill:var(--ext-b);font-weight:600}
+.dg .labbg{fill:var(--surface)}
+.dg .arrow{fill:var(--muted)} .dg .arrow.hot{fill:var(--accent)} .dg .arrow.ext{fill:var(--ext-b)}
+.b-in{fill:var(--in);stroke:var(--in-b)} .b-core{fill:var(--core);stroke:var(--core-b)} .b-db{fill:var(--db);stroke:var(--db-b)} .b-out{fill:var(--out);stroke:var(--out-b)} .b-ext{fill:var(--ext);stroke:var(--ext-b)}
+.dg rect.box{stroke-width:2}
+.dg .zone{fill:none;stroke:var(--line);stroke-dasharray:4 5}
+@media (max-width:640px){body{font-size:14px}.panel{padding:14px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pulso y Seguimiento Operativo Trantor Technologies</span>
+    <h1>Mapa de PULSOTT</h1>
+    <p class="lead">Cómo entra la información al sistema, qué hace con ella, dónde se guarda y a dónde sale. El ejemplo es el proyecto Lectoras Actualización (SAPPA, CC 447): 124 sitios, 504 equipos a intervenir y 505 folios GLPI.</p>
+  </header>
+
+  <section class="panel">
+    <h2>Diagrama general</h2>
+    <div class="legend" style="margin:6px 0 14px">
+      <span><i style="background:var(--in);border-color:var(--in-b)"></i>Entradas</span>
+      <span><i style="background:var(--core);border-color:var(--core-b)"></i>Lo que hace PULSOTT</span>
+      <span><i style="background:var(--db);border-color:var(--db-b)"></i>Base de datos MySQL</span>
+      <span><i style="background:var(--out);border-color:var(--out-b)"></i>Pantallas y salidas</span>
+      <span><i style="background:var(--ext);border-color:var(--ext-b)"></i>Sistema externo (GLPI)</span>
+    </div>
+    <div class="diagram">
+      <svg class="dg" viewBox="0 0 1140 640" role="img" aria-label="Diagrama: la sábana de Excel y la captura del operador entran a PULSOTT, que valida, agrupa por sitio y calcula el semáforo; todo se guarda en MySQL y sale al tablero, desviaciones y Back Office; Sincronizar GLPI consulta y documenta los tickets.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow hot" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="are" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow ext" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+
+        <!-- carriles -->
+        <text class="lane" x="20" y="26">ENTRADAS</text>
+        <text class="lane" x="300" y="26">PULSOTT (NAVEGADOR + SERVIDOR PHP)</text>
+        <text class="lane" x="860" y="26">SALIDAS</text>
+        <rect class="zone" x="285" y="38" width="545" height="420" rx="14"/>
+
+        <!-- Entradas -->
+        <rect class="box b-in" x="20" y="50" width="230" height="118" rx="10"/>
+        <text class="t" x="36" y="76">Sábana de Excel</text>
+        <text class="s" x="36" y="96">OneDrive · Lectoras_Actualizacion</text>
+        <text class="s" x="36" y="114">Hoja BASE DE DATOS TT</text>
+        <text class="s" x="36" y="132">Hoja DATOS DEL PROYECTO</text>
+        <text class="s" x="36" y="150">(versión, cliente, CC)</text>
+
+        <rect class="box b-in" x="20" y="196" width="230" height="100" rx="10"/>
+        <text class="t" x="36" y="222">Captura del operador</text>
+        <text class="s" x="36" y="242">Avance, estatus, reprogramar,</text>
+        <text class="s" x="36" y="260">motivo y área de desviación</text>
+        <text class="s" x="36" y="278">Back Office (costos, gastos)</text>
+
+        <rect class="box b-in" x="20" y="324" width="230" height="84" rx="10"/>
+        <text class="t" x="36" y="350">Responsable de área</text>
+        <text class="s" x="36" y="370">Documenta el seguimiento</text>
+        <text class="s" x="36" y="388">de sus desviaciones</text>
+
+        <!-- Núcleo -->
+        <rect class="box b-core" x="305" y="50" width="250" height="150" rx="10"/>
+        <text class="t" x="321" y="76">1 · Leer y validar</text>
+        <text class="s" x="321" y="96">Reconoce las columnas TT</text>
+        <text class="s" x="321" y="114">Estatus: EJCUTADO → Ejecutado</text>
+        <text class="s" x="321" y="132">Agrupa 510 filas → 124 sitios</text>
+        <text class="s" x="321" y="150">ADICIONADOS no suben la meta</text>
+        <text class="s" x="321" y="168">Sin DATOS DEL PROYECTO: toma</text>
+        <text class="s" x="321" y="186">cliente y CC de las columnas</text>
+
+        <rect class="box b-core" x="565" y="50" width="250" height="150" rx="10"/>
+        <text class="t" x="581" y="76">2 · Campos del tablero</text>
+        <text class="s" x="581" y="96">Meta: CANTIDAD DE EQUIPOS</text>
+        <text class="s" x="581" y="114">Avance: EQUIPOS EJECUTADOS</text>
+        <text class="s" x="581" y="132">Excedente → adicionales</text>
+        <text class="s" x="581" y="150">FECHA (FINAL) REPROGRAMADA</text>
+        <text class="s" x="581" y="168">→ reprogramación con historial</text>
+        <text class="s" x="581" y="186">Une con lo capturado por CR O ID</text>
+
+        <rect class="box b-core" x="305" y="222" width="250" height="110" rx="10"/>
+        <text class="t" x="321" y="248">3 · Semáforo</text>
+        <text class="s" x="321" y="268">Verde, amarillo, rojo, negro</text>
+        <text class="s" x="321" y="286">Atraso contra la fecha vigente</text>
+        <text class="s" x="321" y="304">Real contra esperado a la fecha</text>
+        <text class="s" x="321" y="322">de corte (velocímetro)</text>
+
+        <rect class="box b-core" x="565" y="222" width="250" height="110" rx="10"/>
+        <text class="t" x="581" y="248">4 · Desviaciones</text>
+        <text class="s" x="581" y="268">Motivo y área por sitio</text>
+        <text class="s" x="581" y="286">Activa mientras siga atrasado;</text>
+        <text class="s" x="581" y="304">al quedar en verde: Resuelta</text>
+        <text class="s" x="581" y="322">(el historial no se borra)</text>
+
+        <rect class="box b-core" x="305" y="354" width="510" height="88" rx="10"/>
+        <text class="t" x="321" y="380">5 · Sincronizar GLPI</text>
+        <text class="s" x="321" y="400">Junta los folios GPLI de cada lectora · consulta su estado en GLPI · arma el seguimiento</text>
+        <text class="s" x="321" y="418">Vista previa: tú palomeas y confirmas · nunca reabre un ticket resuelto o cerrado</text>
+
+        <!-- Base de datos -->
+        <rect class="box b-db" x="285" y="490" width="545" height="130" rx="10"/>
+        <text class="t" x="303" y="516">Base de datos MySQL · pulsott</text>
+        <text class="s mono" x="303" y="542">proyectos</text><text class="s" x="440" y="542">sábana + lo capturado, por proyecto</text>
+        <text class="s mono" x="303" y="562">proyectos_versiones</text><text class="s" x="440" y="562">respaldo de cada guardado (últimos 50)</text>
+        <text class="s mono" x="303" y="582">seguimiento_desviaciones</text><text class="s" x="490" y="582">historial de los responsables</text>
+        <text class="s mono" x="303" y="602">glpi_sincronizaciones</text><text class="s" x="470" y="602">qué se documentó en cada ticket</text>
+        <text class="s" x="680" y="542">usuarios · bitacora</text>
+        <text class="s" x="680" y="562">accesos y cambios</text>
+
+        <!-- Salidas -->
+        <rect class="box b-out" x="860" y="50" width="260" height="104" rx="10"/>
+        <text class="t" x="876" y="76">Resumen del proyecto</text>
+        <text class="s" x="876" y="96">KPI, velocímetro, programado</text>
+        <text class="s" x="876" y="114">contra ejecutado por estado,</text>
+        <text class="s" x="876" y="132">tabla con semáforo por sitio</text>
+
+        <rect class="box b-out" x="860" y="172" width="260" height="86" rx="10"/>
+        <text class="t" x="876" y="198">Desviaciones</text>
+        <text class="s" x="876" y="218">KPI por área, detalle e</text>
+        <text class="s" x="876" y="236">historial de documentación</text>
+
+        <rect class="box b-out" x="860" y="276" width="260" height="68" rx="10"/>
+        <text class="t" x="876" y="302">Back Office</text>
+        <text class="s" x="876" y="322">Presupuesto, gasto y precio</text>
+
+        <rect class="box b-ext" x="860" y="366" width="260" height="96" rx="10"/>
+        <text class="t" x="876" y="392">GLPI</text>
+        <text class="s" x="876" y="412">API REST (apirest.php)</text>
+        <text class="s" x="876" y="430">Seguimiento y estado del ticket:</text>
+        <text class="s" x="876" y="448">Resuelto, En curso, En espera</text>
+
+        <!-- Flechas -->
+        <path class="edge hot" d="M250 109 H300" marker-end="url(#arh)"/>
+        <rect class="labbg" x="252" y="86" width="44" height="14"/><text class="lab hot" x="255" y="97">subir</text>
+        <path class="edge" d="M555 125 H561" marker-end="url(#ar)"/>
+        <path class="edge" d="M690 200 V214" marker-end="url(#ar)"/>
+        <path class="edge" d="M430 200 V218" marker-end="url(#ar)"/>
+        <path class="edge" d="M555 277 H561" marker-end="url(#ar)"/>
+        <path class="edge" d="M250 246 C275 246 280 277 301 277" marker-end="url(#ar)"/>
+        <path class="edge" d="M250 366 C300 366 330 300 470 300 S 560 300 561 300" marker-end="url(#ar)"/>
+        <path class="edge" d="M560 332 V350" marker-end="url(#ar)"/>
+        <!-- al y desde MySQL -->
+        <path class="edge hot" d="M557 442 V486" marker-end="url(#arh)"/>
+        <rect class="labbg" x="563" y="456" width="56" height="14"/><text class="lab hot" x="566" y="467">guarda</text>
+        <!-- salidas -->
+        <path class="edge" d="M830 520 C850 520 845 102 856 102" marker-end="url(#ar)"/>
+        <path class="edge" d="M815 277 C838 277 838 215 856 215" marker-end="url(#ar)"/>
+        <path class="edge" d="M830 560 C846 560 846 310 856 310" marker-end="url(#ar)"/>
+        <!-- GLPI ida y vuelta -->
+        <path class="edge ext" d="M815 392 H856" marker-end="url(#are)"/>
+        <path class="edge ext" d="M856 430 H819" marker-end="url(#are)"/>
+        <rect class="labbg" x="820" y="374" width="38" height="13"/><text class="lab ext" x="821" y="384">escribe</text>
+        <rect class="labbg" x="822" y="434" width="34" height="13"/><text class="lab ext" x="823" y="444">estado</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Qué pasa al tocar “Actualizar sábana”</h2>
+    <p class="lead" style="margin-bottom:14px">La sábana manda sobre los datos del sitio. Lo que se captura en PULSOTT (motivo, área, comentario, seguimientos) se conserva.</p>
+    <ol class="steps">
+      <li><div><b>Lee la hoja BASE DE DATOS TT.</b> Si viene una fila por lectora, junta las filas por CR O ID: suma equipos y ejecutados, junta los folios y toma la fecha más temprana y la más tardía.</div></li>
+      <li><div><b>Revisa el formato.</b> Avisa si faltan columnas, si hay estatus no válidos, IDs repetidos o fechas vacías. Corrige typos como “EJCUTADO”.</div></li>
+      <li><div><b>Une cada sitio con lo que ya existe</b> usando el CR O ID. COL2 sigue siendo COL2 con su desviación e historial.</div></li>
+      <li><div><b>Actualiza meta, avance y estatus</b> desde la sábana. Si un sitio tiene fecha reprogramada distinta a la original, registra la reprogramación.</div></li>
+      <li><div><b>Guarda en MySQL</b> una versión nueva del proyecto y deja respaldo de la anterior en <span class="mono">proyectos_versiones</span>.</div></li>
+    </ol>
+  </section>
+
+  <div class="grid">
+    <article class="card" style="--c:var(--core-b)">
+      <h3>Reglas de la sábana</h3>
+      <ul>
+        <li>Meta = <code>CANTIDAD DE EQUIPOS A INTERVENIR</code></li>
+        <li>Avance = <code>EQUIPOS EJECUTADOS</code></li>
+        <li>Filas “ADICIONADOS”: no suben la meta, cuentan como adicionales (CHS8: 5 + 2, NAY3: 2 + 3)</li>
+        <li>Lectora cancelada: no cuenta en la meta</li>
+        <li><code>FECHA REPROGRAMADA</code> y <code>FECHA FINAL REPROGRAMADA</code> mueven la fecha vigente</li>
+      </ul>
+    </article>
+    <article class="card" style="--c:var(--ext-b)">
+      <h3>Sincronizar GLPI</h3>
+      <ul>
+        <li>Ejecutado y ticket abierto: resuelve el ticket</li>
+        <li>En proceso: pasa a En curso</li>
+        <li>Detenido: pasa a En espera</li>
+        <li>Programado y ticket nuevo: pasa a Planificado</li>
+        <li>Cancelado o ticket ya cerrado: solo se marca para revisar</li>
+        <li>Solo lectura: consulta el estado de cada ticket (URL y tokens en <code>.env</code>)</li>
+      </ul>
+    </article>
+    <article class="card" style="--c:var(--db-b)">
+      <h3>Dónde vive cada archivo</h3>
+      <ul>
+        <li><code>PULSOTT.html</code>: pantallas y cálculos</li>
+        <li><code>api/index.php</code>: guarda, lee y habla con GLPI</li>
+        <li><code>app/glpi.php</code>: conexión a la API de GLPI</li>
+        <li><code>.env</code>: credenciales (base de datos y tokens GLPI), fuera del repositorio</li><li><code>config/config.php</code>: ajustes sin credenciales</li>
+        <li><code>database/schema.sql</code>: tablas</li>
+      </ul>
+    </article>
+  </div>
+
+  <section class="panel">
+    <h2>Quién puede hacer qué</h2>
+    <div class="tscroll">
+      <table class="roles">
+        <thead><tr><th>Rol</th><th>Ve el tablero</th><th>Sube sábana y captura</th><th>Sincroniza GLPI</th><th>Documenta desviaciones</th><th>Usuarios y bitácora</th></tr></thead>
+        <tbody>
+          <tr><td><b>Administrador</b></td><td>Sí</td><td>Sí</td><td>Sí</td><td>Sí, de cualquier área</td><td>Sí</td></tr>
+          <tr><td><b>Operador</b></td><td>Sí</td><td>Sí</td><td>Sí</td><td>No</td><td>No</td></tr>
+          <tr><td><b>Responsable de área</b></td><td>Sí</td><td>No</td><td>No</td><td>Solo de su área</td><td>No</td></tr>
+          <tr><td><b>Consulta</b></td><td>Sí, y descarga</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Estado al 13 de noviembre de 2026. Servidor: XAMPP local (Apache + PHP 8.5 + MySQL), en http://localhost/PULSOTT/.</footer>
+</div>

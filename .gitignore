@@ -1,0 +1,7 @@
+# Credenciales: el .env NUNCA se sube al repositorio (la plantilla .env.example sí)
+.env
+.env.*
+!.env.example
+
+# Respaldos locales (pueden contener datos de proyectos)
+respaldo/

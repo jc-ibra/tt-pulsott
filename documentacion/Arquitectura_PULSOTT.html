@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Arquitectura PULSOTT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: diagrama de arquitectura a todo el ancho en cuatro zonas (usuarios, navegador, servidor, GLPI); debajo, leyenda de símbolos y conexiones */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#16202B; --muted:#5A6878; --line:#CBD3DD; --zone:#F7F9FB;
+  --accent:#1F5FBF; --acc-soft:#E4EEFB;
+  --srv:#2E3B4A; --srv-soft:#E6EAEF; --db:#C98F12; --db-soft:#FFF3D9;
+  --xl:#1E7A45; --xl-soft:#E3F3EA; --cloud:#2F7BD8; --ext:#C9584A; --ext-soft:#FDE8E6; --led:#2FB36A;
+  --e:#1F5FBF; --p:#2F8A55; --a:#B07A0C; --o:#7A4FC0;
+  --f-display:"Archivo","Segoe UI",system-ui,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161C; --surface:#19212A; --ink:#E6ECF2; --muted:#93A1B1; --line:#33404D; --zone:#151C23;
+  --accent:#7FB0F5; --acc-soft:#1C2C42; --srv:#AFC0D2; --srv-soft:#24303C; --db:#E6B44A; --db-soft:#33291A;
+  --xl:#4FC17F; --xl-soft:#173226; --cloud:#6FA8F0; --ext:#E88070; --ext-soft:#3A2220; --led:#4FD38A; --e:#4C8DE8; --p:#3FA56B; --a:#D19A22; --o:#9B74DC; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161C; --surface:#19212A; --ink:#E6ECF2; --muted:#93A1B1; --line:#33404D; --zone:#151C23;
+  --accent:#7FB0F5; --acc-soft:#1C2C42; --srv:#AFC0D2; --srv-soft:#24303C; --db:#E6B44A; --db-soft:#33291A;
+  --xl:#4FC17F; --xl-soft:#173226; --cloud:#6FA8F0; --ext:#E88070; --ext-soft:#3A2220; --led:#4FD38A; --e:#4C8DE8; --p:#3FA56B; --a:#D19A22; --o:#9B74DC; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:26px 44px}
+.wrap{max-width:1320px;margin:0 auto;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--db)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:700;font-size:1.15rem;margin:0}
+.lead{color:var(--muted);max-width:72ch;margin:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.diagram{overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:1000px;height:auto}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px 22px}
+.lg{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center;font-size:.9rem}
+.lg svg{width:40px;height:40px}
+.lg b{display:block;font-weight:600}
+.lg span{color:var(--muted);font-size:.84rem}
+footer{color:var(--muted);font-size:.82rem}
+.dg .bd rect{stroke:none}
+.dg .bd text{font-family:var(--f-mono);font-size:11px;font-weight:600;fill:#FFFFFF}
+.bE rect{fill:var(--e)} .bP rect{fill:var(--p)} .bA rect{fill:var(--a)} .bS rect{fill:var(--o)}
+.ipo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.ipo{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.ipo{grid-template-columns:1fr}}
+.col{border:1px solid var(--line);border-top:5px solid var(--c);border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start;min-width:0;background:var(--surface)}
+.col h3{font-family:var(--f-display);font-size:1rem;margin:0;display:flex;align-items:center;gap:8px}
+.col h3 small{font-family:var(--f-mono);font-weight:500;font-size:.72rem;color:var(--muted);letter-spacing:.08em}
+.it{display:grid;grid-template-columns:34px 1fr;gap:8px;font-size:.88rem;align-items:start}
+.it span{color:var(--muted);display:block;font-size:.82rem}
+.code{font-family:var(--f-mono);font-size:.75rem;font-weight:600;color:#fff;background:var(--c);border-radius:6px;text-align:center;padding:2px 0}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem;min-width:760px}
+.tbl th,.tbl td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tbl .grp td{background:var(--zone);font-family:var(--f-display);font-weight:700}
+.tscroll{overflow-x:auto}
+/* SVG */
+.dg text{font-family:var(--f-body);fill:var(--ink)}
+.dg .t{font-family:var(--f-display);font-weight:700;font-size:15px}
+.dg .tl{font-family:var(--f-display);font-weight:800;font-size:17px}
+.dg .s{font-size:12.5px;fill:var(--muted)}
+.dg .m{font-family:var(--f-mono);font-size:12px}
+.dg .ms{font-family:var(--f-mono);font-size:11.5px;fill:var(--muted)}
+.dg .zl{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;fill:var(--muted)}
+.dg .zone{fill:var(--zone);stroke:var(--line);stroke-width:1.4;stroke-dasharray:5 5}
+.dg .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.dg .edge{fill:none;stroke:var(--muted);stroke-width:1.8}
+.dg .hot{stroke:var(--accent);stroke-width:2.2}
+.dg .ext{stroke:var(--ext);stroke-width:2.2}
+.dg .dbe{stroke:var(--db);stroke-width:2.2}
+.dg .xle{stroke:var(--xl);stroke-width:2.2}
+.dg .lab{font-family:var(--f-mono);font-size:11px;font-weight:500}
+.dg .lbg{fill:var(--surface)}
+.dg .ah{fill:var(--accent)} .dg .ae{fill:var(--ext)} .dg .ad{fill:var(--db)} .dg .ax{fill:var(--xl)} .dg .am{fill:var(--muted)}
+/* iconos */
+.i-srv-body{fill:var(--srv-soft);stroke:var(--srv);stroke-width:2}
+.i-srv-line{stroke:var(--srv);stroke-width:2;fill:none}
+.i-led{fill:var(--led)}
+.i-db{fill:var(--db-soft);stroke:var(--db);stroke-width:2}
+.i-user{fill:var(--acc-soft);stroke:var(--accent);stroke-width:2}
+.i-mon{fill:var(--surface);stroke:var(--srv);stroke-width:2.4}
+.i-monb{fill:var(--srv)}
+.i-file{fill:var(--surface);stroke:var(--muted);stroke-width:1.8}
+.i-xl{fill:var(--xl)}
+.i-html{fill:var(--accent)}
+.i-cloud{fill:var(--acc-soft);stroke:var(--cloud);stroke-width:2}
+.i-lock{fill:var(--db-soft);stroke:var(--db);stroke-width:2}
+.i-tk{fill:var(--ext-soft);stroke:var(--ext);stroke-width:2}
+.i-ext{fill:var(--ext-soft);stroke:var(--ext);stroke-width:2}
+.i-extl{stroke:var(--ext);stroke-width:2;fill:none}
+.i-bar{fill:var(--srv-soft)}
+.i-wt{fill:#FFFFFF;font-family:var(--f-mono);font-size:9px;font-weight:600}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Pulso y Seguimiento Operativo Trantor Technologies · Arquitectura técnica</span>
+  <h1>Arquitectura de PULSOTT</h1>
+  <p class="lead">Cómo nace un proyecto (sábana, tickets y folios) y, ya dentro de PULSOTT, qué equipos y programas intervienen, cómo se conectan y por dónde viaja la información: del Excel en OneDrive al navegador, del navegador al servidor XAMPP con MySQL, y la consulta de solo lectura a GLPI.</p>
+</header>
+
+<section class="panel">
+<div class="diagram">
+<svg class="dg" viewBox="0 0 1400 1100" role="img" aria-label="Arquitectura: los usuarios entran desde el navegador a PULSOTT.html; la sábana de Excel llega desde OneDrive; el navegador se comunica por HTTP con el servidor XAMPP (Apache y PHP), que guarda en MySQL y se conecta por API REST con GLPI.">
+<defs>
+  <symbol id="ic-user" viewBox="0 0 48 48"><circle class="i-user" cx="24" cy="15" r="9"/><path class="i-user" d="M7 44c0-10 7.6-16 17-16s17 6 17 16z"/></symbol>
+  <symbol id="ic-srv" viewBox="0 0 70 110">
+    <rect class="i-srv-body" x="3" y="3" width="64" height="104" rx="6"/>
+    <rect class="i-bar" x="10" y="12" width="50" height="22" rx="3" stroke="var(--srv)" stroke-width="1.6"/>
+    <rect class="i-bar" x="10" y="42" width="50" height="22" rx="3" stroke="var(--srv)" stroke-width="1.6"/>
+    <rect class="i-bar" x="10" y="72" width="50" height="22" rx="3" stroke="var(--srv)" stroke-width="1.6"/>
+    <path class="i-srv-line" d="M16 23h22M16 53h22M16 83h22"/>
+    <circle class="i-led" cx="52" cy="23" r="3"/><circle class="i-led" cx="52" cy="53" r="3"/><circle class="i-led" cx="52" cy="83" r="3"/>
+  </symbol>
+  <symbol id="ic-db" viewBox="0 0 90 110">
+    <path class="i-db" d="M4 16v78c0 7 18.3 12 41 12s41-5 41-12V16"/>
+    <ellipse class="i-db" cx="45" cy="16" rx="41" ry="12"/>
+    <path class="i-db" d="M4 42c0 7 18.3 12 41 12s41-5 41-12M4 68c0 7 18.3 12 41 12s41-5 41-12" fill="none"/>
+  </symbol>
+  <symbol id="ic-cloud" viewBox="0 0 120 76"><path class="i-cloud" d="M30 70h66a20 20 0 0 0 2-40 30 30 0 0 0-57-8A22 22 0 0 0 30 70z"/></symbol>
+  <symbol id="ic-xlsx" viewBox="0 0 40 50"><path class="i-file" d="M3 3h24l10 10v34H3z"/><path class="i-file" d="M27 3v10h10" fill="none"/><rect class="i-xl" x="0" y="26" width="32" height="14" rx="2"/><text class="i-wt" x="3.5" y="36.5">XLSX</text></symbol>
+  <symbol id="ic-html" viewBox="0 0 40 50"><path class="i-file" d="M3 3h24l10 10v34H3z"/><path class="i-file" d="M27 3v10h10" fill="none"/><rect class="i-html" x="0" y="26" width="32" height="14" rx="2"/><text class="i-wt" x="3.5" y="36.5">HTML</text></symbol>
+  <symbol id="ic-php" viewBox="0 0 40 50"><path class="i-file" d="M3 3h24l10 10v34H3z"/><path class="i-file" d="M27 3v10h10" fill="none"/><rect fill="var(--srv)" x="0" y="26" width="32" height="14" rx="2"/><text class="i-wt" x="6" y="36.5" style="fill:var(--surface)">PHP</text></symbol>
+  <symbol id="ic-lock" viewBox="0 0 40 46"><path d="M11 20v-7a9 9 0 0 1 18 0v7" fill="none" stroke="var(--db)" stroke-width="3"/><rect class="i-lock" x="5" y="20" width="30" height="23" rx="4"/><circle cx="20" cy="31" r="3" fill="var(--db)"/></symbol>
+  <symbol id="ic-ticket" viewBox="0 0 60 40"><path class="i-tk" d="M3 6h54v9a5 5 0 0 0 0 10v9H3v-9a5 5 0 0 0 0-10z"/><path d="M20 6v28" stroke="var(--ext)" stroke-width="1.6" stroke-dasharray="3 3"/><path d="M27 15h22M27 22h16" stroke="var(--ext)" stroke-width="2"/></symbol>
+  <symbol id="ic-extsrv" viewBox="0 0 70 110">
+    <rect class="i-ext" x="3" y="3" width="64" height="104" rx="6"/>
+    <rect x="10" y="12" width="50" height="22" rx="3" fill="var(--surface)" stroke="var(--ext)" stroke-width="1.6"/>
+    <rect x="10" y="42" width="50" height="22" rx="3" fill="var(--surface)" stroke="var(--ext)" stroke-width="1.6"/>
+    <rect x="10" y="72" width="50" height="22" rx="3" fill="var(--surface)" stroke="var(--ext)" stroke-width="1.6"/>
+    <path class="i-extl" d="M16 23h22M16 53h22M16 83h22"/>
+    <circle class="i-led" cx="52" cy="23" r="3"/><circle class="i-led" cx="52" cy="53" r="3"/><circle class="i-led" cx="52" cy="83" r="3"/>
+  </symbol>
+  <marker id="mh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="me" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ae" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="md" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ad" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="mx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ax" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="mm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="am" d="M0 0L10 5L0 10z"/></marker>
+</defs>
+<text class="zl" x="20" y="30">ORIGEN DEL PROYECTO · ANTES DE ENTRAR A PULSOTT</text>
+<rect class="card" x="20" y="46" width="248" height="134" rx="12"/>
+<circle cx="44" cy="70" r="13" fill="var(--e)"/><text x="44" y="75" text-anchor="middle" style="font-family:var(--f-mono);font-size:13px;font-weight:600;fill:#fff">1</text>
+<use href="#ic-user" x="36" y="96" width="46" height="46"/>
+<text class="t" x="68" y="76">Objetivo del cliente</text>
+<text class="s" x="100" y="112">Alcance: sitios y equipos</text><text class="s" x="100" y="130">a intervenir</text>
+<text class="ms" x="100" y="160" style="fill:var(--e)">Cliente</text>
+<path class="edge hot" d="M270 113 H294" marker-end="url(#mh)"/>
+<rect class="card" x="298" y="46" width="248" height="134" rx="12"/>
+<circle cx="322" cy="70" r="13" fill="var(--e)"/><text x="322" y="75" text-anchor="middle" style="font-family:var(--f-mono);font-size:13px;font-weight:600;fill:#fff">2</text>
+<use href="#ic-xlsx" x="314" y="92" width="40" height="50"/>
+<text class="t" x="346" y="76">Crear la sábana</text>
+<text class="s" x="378" y="112">Excel en OneDrive,</text><text class="s" x="378" y="130">hoja BASE DE DATOS TT</text>
+<text class="ms" x="378" y="160" style="fill:var(--e)">Operador · manual</text>
+<path class="edge hot" d="M548 113 H572" marker-end="url(#mh)"/>
+<rect class="card" x="576" y="46" width="248" height="134" rx="12"/>
+<circle cx="600" cy="70" r="13" fill="var(--e)"/><text x="600" y="75" text-anchor="middle" style="font-family:var(--f-mono);font-size:13px;font-weight:600;fill:#fff">3</text>
+<use href="#ic-ticket" x="592" y="96" width="54" height="36"/>
+<text class="t" x="624" y="76">Solicitar tickets</text>
+<text class="s" x="656" y="112">Se envía la sábana a</text><text class="s" x="656" y="130">Mesa de servicio</text>
+<text class="ms" x="656" y="160" style="fill:var(--e)">Operador · manual</text>
+<path class="edge hot" d="M826 113 H850" marker-end="url(#mh)"/>
+<rect class="card" x="854" y="46" width="248" height="134" rx="12"/>
+<circle cx="878" cy="70" r="13" fill="var(--e)"/><text x="878" y="75" text-anchor="middle" style="font-family:var(--f-mono);font-size:13px;font-weight:600;fill:#fff">4</text>
+<use href="#ic-extsrv" x="870" y="92" width="34" height="54"/>
+<text class="t" x="902" y="76">Mesa crea los tickets</text>
+<text class="s" x="934" y="112">En GLPI, un folio</text><text class="s" x="934" y="130">por lectora</text>
+<text class="ms" x="934" y="160" style="fill:var(--e)">Mesa de servicio</text>
+<path class="edge hot" d="M1104 113 H1128" marker-end="url(#mh)"/>
+<rect class="card" x="1132" y="46" width="248" height="134" rx="12"/>
+<circle cx="1156" cy="70" r="13" fill="var(--e)"/><text x="1156" y="75" text-anchor="middle" style="font-family:var(--f-mono);font-size:13px;font-weight:600;fill:#fff">5</text>
+<use href="#ic-xlsx" x="1148" y="92" width="40" height="50"/>
+<text class="t" x="1180" y="76">Folios a la sábana</text>
+<text class="s" x="1212" y="112">Se capturan en la columna</text><text class="s" x="1212" y="130">FOLIOS GLPI</text>
+<text class="ms" x="1212" y="160" style="fill:var(--e)">Operador · manual</text>
+<path class="edge hot" d="M1256 180 V210 H420 V276" marker-end="url(#mh)"/>
+<rect class="lbg" x="560" y="200" width="250" height="20" rx="4"/><text class="lab" x="566" y="214" style="fill:var(--accent)">sábana lista, con folios GLPI</text>
+<g transform="translate(0 240)">
+
+<!-- ===== Fila superior: OneDrive ===== -->
+<use href="#ic-cloud" x="300" y="22" width="130" height="82"/>
+<use href="#ic-xlsx" x="345" y="50" width="34" height="42"/>
+<text class="t" x="445" y="50">OneDrive</text>
+<text class="s" x="445" y="69">Lectoras_Actualizacion.xlsx</text>
+<text class="ms" x="445" y="87">BASE DE DATOS TT</text>
+<text class="ms" x="445" y="103">DATOS DEL PROYECTO</text>
+
+<!-- ===== Zonas ===== -->
+<rect class="zone" x="20" y="180" width="210" height="660" rx="14"/>
+<text class="zl" x="38" y="204">USUARIOS</text>
+<rect class="zone" x="255" y="180" width="350" height="660" rx="14"/>
+<text class="zl" x="273" y="204">EQUIPO DEL USUARIO</text>
+<rect class="zone" x="640" y="180" width="400" height="660" rx="14"/>
+<text class="zl" x="658" y="204">SERVIDOR · XAMPP LOCAL</text>
+<rect class="zone" x="1075" y="180" width="305" height="660" rx="14"/>
+<text class="zl" x="1093" y="204">SISTEMA EXTERNO</text>
+
+<!-- ===== Usuarios ===== -->
+<use href="#ic-user" x="36" y="232" width="46" height="46"/>
+<text class="t" x="92" y="250">Administrador</text><text class="s" x="92" y="268">Todo + usuarios</text>
+<use href="#ic-user" x="36" y="322" width="46" height="46"/>
+<text class="t" x="92" y="340">Operador</text><text class="s" x="92" y="358">Sube sábana, captura,</text><text class="s" x="92" y="374">sincroniza GLPI</text>
+<use href="#ic-user" x="36" y="412" width="46" height="46"/>
+<text class="t" x="92" y="430">Resp. de área</text><text class="s" x="92" y="448">Documenta sus</text><text class="s" x="92" y="464">desviaciones</text>
+<use href="#ic-user" x="36" y="502" width="46" height="46"/>
+<text class="t" x="92" y="520">Consulta</text><text class="s" x="92" y="538">Ve y descarga</text>
+<text class="s" x="38" y="610">Inician sesión con</text>
+<text class="s" x="38" y="626">usuario y contraseña;</text>
+<text class="s" x="38" y="642">el servidor asigna</text>
+<text class="s" x="38" y="658">el rol.</text>
+
+<!-- ===== Navegador ===== -->
+<rect class="i-mon" x="280" y="226" width="300" height="236" rx="10"/>
+<rect class="i-monb" x="410" y="462" width="40" height="22"/>
+<rect class="i-monb" x="370" y="484" width="120" height="8" rx="3"/>
+<!-- ventana del navegador -->
+<rect fill="var(--srv-soft)" x="292" y="238" width="276" height="26" rx="5"/>
+<circle cx="306" cy="251" r="4" fill="#E0655A"/><circle cx="319" cy="251" r="4" fill="#E9B23C"/><circle cx="332" cy="251" r="4" fill="#4FB57A"/>
+<rect fill="var(--surface)" x="344" y="243" width="216" height="16" rx="8"/>
+<text class="ms" x="352" y="255">localhost/PULSOTT/</text>
+<use href="#ic-html" x="298" y="276" width="30" height="38"/>
+<text class="t" x="338" y="292">PULSOTT.html</text>
+<text class="s" x="338" y="310">Pantallas y cálculos (JavaScript)</text>
+<g class="s">
+  <rect class="card" x="298" y="324" width="128" height="28" rx="6"/><text class="s" x="308" y="342">Resumen · Tablero</text>
+  <rect class="card" x="434" y="324" width="128" height="28" rx="6"/><text class="s" x="444" y="342">Semáforo</text>
+  <rect class="card" x="298" y="358" width="128" height="28" rx="6"/><text class="s" x="308" y="376">Desviaciones</text>
+  <rect class="card" x="434" y="358" width="128" height="28" rx="6"/><text class="s" x="444" y="376">Back Office</text>
+  <rect class="card" x="298" y="392" width="128" height="28" rx="6"/><text class="s" x="308" y="410">Prospectos</text>
+  <rect class="card" x="434" y="392" width="128" height="28" rx="6"/><text class="s" x="444" y="410">Estatus GLPI</text>
+</g>
+<text class="ms" x="298" y="444">Lee el Excel con SheetJS</text>
+
+<!-- Salidas -->
+<text class="zl" x="273" y="560">SALIDAS</text>
+<rect class="card" x="273" y="574" width="314" height="78" rx="10"/>
+<use href="#ic-xlsx" x="286" y="588" width="40" height="50"/>
+<text class="t" x="338" y="614">Excel descargado</text>
+<text class="s" x="338" y="633">Sábana con avances capturados</text>
+<rect class="card" x="273" y="658" width="314" height="78" rx="10"/>
+<use href="#ic-html" x="286" y="672" width="40" height="50"/>
+<text class="t" x="338" y="698">Dashboard para cliente</text>
+<text class="s" x="338" y="717">Reporte de avance para compartir</text>
+<rect class="card" x="273" y="742" width="314" height="78" rx="10"/>
+<use href="#ic-html" x="286" y="756" width="40" height="50"/>
+<text class="t" x="338" y="782">Modo kiosko</text>
+<text class="s" x="338" y="801">Velocímetros rotando en pantalla</text>
+
+<!-- ===== Servidor ===== -->
+<use href="#ic-srv" x="660" y="226" width="78" height="122"/>
+<text class="tl" x="752" y="248">Apache + PHP 8.5</text>
+<text class="ms" x="752" y="268">http://localhost/PULSOTT/</text>
+<rect class="card" x="752" y="282" width="270" height="42" rx="8"/>
+<use href="#ic-php" x="760" y="286" width="28" height="34"/>
+<text class="m" x="796" y="299">index.php · login.php</text><text class="s" x="796" y="316">Acceso, sesión, usuarios, bitácora</text>
+<rect class="card" x="752" y="329" width="270" height="42" rx="8"/>
+<use href="#ic-php" x="760" y="333" width="28" height="34"/>
+<text class="m" x="796" y="346">api/index.php</text><text class="s" x="796" y="363">Lee y guarda los datos</text>
+<rect class="card" x="752" y="376" width="270" height="42" rx="8"/>
+<use href="#ic-php" x="760" y="380" width="28" height="34"/>
+<text class="m" x="796" y="393">app/glpi.php</text><text class="s" x="796" y="410">Consulta tickets · solo lectura</text>
+<rect class="card" x="752" y="423" width="270" height="42" rx="8"/>
+<use href="#ic-lock" x="761" y="427" width="26" height="32"/>
+<text class="m" x="796" y="440">.env</text><text class="s" x="796" y="457">Credenciales MySQL y tokens GLPI</text>
+
+<!-- MySQL -->
+<use href="#ic-db" x="660" y="520" width="92" height="112"/>
+<text class="m" x="680" y="590" style="font-weight:600">MySQL</text>
+<text class="tl" x="770" y="532">pulsott</text>
+<text class="ms" x="770" y="550">schema.sql · usuario pulsott_app</text>
+<g>
+  <text class="m" x="770" y="576">proyectos</text><text class="s" x="770" y="591">sábana + lo capturado</text>
+  <text class="m" x="770" y="613">proyectos_versiones</text><text class="s" x="770" y="628">respaldo (últimos 50)</text>
+  <text class="m" x="770" y="650">seguimiento_desviaciones</text><text class="s" x="770" y="665">historial de responsables</text>
+  <text class="m" x="770" y="687">glpi_sincronizaciones</text><text class="s" x="770" y="702">consultas de estado a GLPI</text>
+  <text class="m" x="770" y="724">prospectos</text><text class="s" x="770" y="739">embudo comercial</text>
+  <text class="m" x="770" y="761">fotos_personas</text><text class="s" x="770" y="776">fotos de coordinadores</text>
+  <text class="m" x="770" y="798">usuarios · bitacora · ajustes</text><text class="s" x="770" y="813">accesos, cambios y ajustes</text>
+</g>
+
+<!-- ===== GLPI ===== -->
+<use href="#ic-extsrv" x="1095" y="226" width="78" height="122"/>
+<text class="tl" x="1186" y="248">GLPI</text>
+<text class="s" x="1186" y="268">Mesa de servicio</text>
+<text class="m" x="1186" y="292">apirest.php</text>
+<text class="s" x="1186" y="310">API REST</text>
+<use href="#ic-lock" x="1095" y="372" width="28" height="32"/>
+<text class="m" x="1132" y="386">app_token</text>
+<text class="m" x="1132" y="402">user_token</text>
+<use href="#ic-ticket" x="1095" y="440" width="64" height="44"/>
+<text class="t" x="1170" y="458">Tickets por folio</text>
+<text class="s" x="1170" y="476">505 folios del proyecto</text>
+<text class="zl" x="1093" y="524">EQUIVALENCIA DE ESTADOS</text>
+<text class="ms" x="1093" y="546" style="font-weight:600">GLPI</text><text class="ms" x="1250" y="546" style="font-weight:600">PULSOTT</text>
+<rect x="1088" y="556" width="280" height="24" fill="var(--zone)"/><text class="s" x="1093" y="572">Nuevo</text><text class="m" x="1234" y="572" style="fill:var(--muted)">→</text><text class="m" x="1254" y="572" style="fill:var(--muted);font-weight:600">Omitir</text>
+<rect x="1088" y="580" width="280" height="24" fill="var(--surface)"/><text class="s" x="1093" y="596">Aprobación</text><text class="m" x="1234" y="596" style="fill:var(--muted)">→</text><text class="m" x="1254" y="596" style="fill:var(--muted);font-weight:600">Omitir</text>
+<rect x="1088" y="604" width="280" height="24" fill="var(--zone)"/><text class="s" x="1093" y="620">En curso (asignada)</text><text class="m" x="1234" y="620" style="fill:var(--muted)">→</text><text class="m" x="1254" y="620" style="fill:var(--ink);font-weight:600">POR PROGRAMAR</text>
+<rect x="1088" y="628" width="280" height="24" fill="var(--surface)"/><text class="s" x="1093" y="644">En curso (planificada)</text><text class="m" x="1234" y="644" style="fill:var(--muted)">→</text><text class="m" x="1254" y="644" style="fill:var(--ink);font-weight:600">PROGRAMADO</text>
+<rect x="1088" y="652" width="280" height="24" fill="var(--zone)"/><text class="s" x="1093" y="668">Atendiéndose</text><text class="m" x="1234" y="668" style="fill:var(--muted)">→</text><text class="m" x="1254" y="668" style="fill:var(--ink);font-weight:600">PROCESO</text>
+<rect x="1088" y="676" width="280" height="24" fill="var(--surface)"/><text class="s" x="1093" y="692">En espera</text><text class="m" x="1234" y="692" style="fill:var(--muted)">→</text><text class="m" x="1254" y="692" style="fill:var(--ink);font-weight:600">PENDIENTE</text>
+<rect x="1088" y="700" width="280" height="24" fill="var(--zone)"/><text class="s" x="1093" y="716">Resuelto / Cerrado</text><text class="m" x="1234" y="716" style="fill:var(--muted)">→</text><text class="m" x="1254" y="716" style="fill:var(--ink);font-weight:600">EJECUTADO</text>
+<rect x="1088" y="724" width="280" height="24" fill="var(--surface)"/><text class="s" x="1093" y="740">No cerrado</text><text class="m" x="1234" y="740" style="fill:var(--muted)">→</text><text class="m" x="1254" y="740" style="fill:var(--ink);font-weight:600">CANCELADO</text>
+<rect x="1088" y="748" width="280" height="24" fill="var(--zone)"/><text class="s" x="1093" y="764">No resuelto</text><text class="m" x="1234" y="764" style="fill:var(--muted)">→</text><text class="m" x="1254" y="764" style="fill:var(--ext);font-weight:600">CANCELADO *</text>
+<text class="s" x="1093" y="792" style="fill:var(--ext)">* La regla pide omitirlo: confirmar.</text>
+<text class="s" x="1093" y="812">Solo lectura: PULSOTT convierte</text>
+<text class="s" x="1093" y="828">internamente; GLPI no cambia.</text>
+
+<!-- ===== Conexiones ===== -->
+<!-- usuarios → navegador -->
+<path class="edge" d="M200 255 C240 255 245 300 276 300" marker-end="url(#mm)"/>
+<path class="edge" d="M200 345 C240 345 245 320 276 320" marker-end="url(#mm)"/>
+<path class="edge" d="M200 435 C240 435 245 340 276 340" marker-end="url(#mm)"/>
+<path class="edge" d="M200 525 C240 525 245 360 276 360" marker-end="url(#mm)"/>
+
+<!-- OneDrive → navegador -->
+<path class="edge xle" d="M362 104 V222" marker-end="url(#mx)"/>
+<rect class="lbg" x="370" y="138" width="200" height="36" rx="4"/>
+<text class="lab" x="374" y="154" style="fill:var(--xl)">6 · subir sábana (.xlsx)</text>
+<text class="lab" x="374" y="169" style="fill:var(--xl)">nuevo proyecto en PULSOTT</text>
+
+<!-- navegador ↔ servidor -->
+<path class="edge hot" d="M580 296 H654" marker-end="url(#mh)"/>
+<path class="edge hot" d="M654 326 H584" marker-end="url(#mh)"/>
+<rect class="lbg" x="586" y="268" width="66" height="22" rx="4"/>
+<text class="lab" x="590" y="283" style="fill:var(--accent)">HTTP</text>
+<text class="lab" x="588" y="346" style="fill:var(--accent)">JSON</text>
+<text class="ms" x="586" y="364" style="font-size:10.5px">/api/</text>
+
+<!-- navegador → salidas -->
+<path class="edge" d="M430 494 V566" marker-end="url(#mm)"/>
+
+<!-- servidor → MySQL -->
+<path class="edge dbe" d="M700 352 V512" marker-end="url(#md)"/>
+<path class="edge dbe" d="M716 512 V352" marker-end="url(#md)"/>
+<rect class="lbg" x="652" y="420" width="96" height="40" rx="4"/>
+<text class="lab" x="660" y="436" style="fill:var(--db)">PDO</text>
+<text class="lab" x="660" y="452" style="fill:var(--db)">puerto 3306</text>
+
+<!-- glpi.php ↔ GLPI -->
+<path class="edge ext" d="M1022 392 C1052 392 1060 296 1090 296" marker-end="url(#me)"/>
+<path class="edge ext" d="M1090 318 C1062 318 1058 410 1026 410" marker-end="url(#me)"/>
+<rect class="lbg" x="1026" y="226" width="54" height="58" rx="4"/>
+<text class="lab" x="1030" y="240" style="fill:var(--ext)">HTTPS</text>
+<text class="lab" x="1030" y="256" style="fill:var(--ext)">consulta</text>
+<text class="lab" x="1030" y="272" style="fill:var(--ext)">(GET)</text>
+<text class="lab" x="1030" y="440" style="fill:var(--ext)">recibe</text>
+<text class="lab" x="1030" y="456" style="fill:var(--ext)">estado</text>
+<!-- marcas E/P/A/S -->
+<g class="bd bE" transform="translate(200 40)"><rect width="85" height="20" rx="10"/><text x="42.5" y="14" text-anchor="middle">ENTRADA E1</text></g>
+<g class="bd bE" transform="translate(136 189)"><rect width="85" height="20" rx="10"/><text x="42.5" y="14" text-anchor="middle">ENTRADA E2</text></g>
+<g class="bd bE" transform="translate(92 381)"><rect width="85" height="20" rx="10"/><text x="42.5" y="14" text-anchor="middle">ENTRADA E3</text></g>
+<g class="bd bE" transform="translate(92 471)"><rect width="85" height="20" rx="10"/><text x="42.5" y="14" text-anchor="middle">ENTRADA E4</text></g>
+<g class="bd bE" transform="translate(988 466)"><rect width="85" height="20" rx="10"/><text x="42.5" y="14" text-anchor="middle">ENTRADA E5</text></g>
+<g class="bd bP" transform="translate(472 430)"><rect width="30" height="20" rx="10"/><text x="15.0" y="14" text-anchor="middle">P1</text></g>
+<g class="bd bP" transform="translate(527 329)"><rect width="30" height="20" rx="10"/><text x="15.0" y="14" text-anchor="middle">P2</text></g>
+<g class="bd bP" transform="translate(391 363)"><rect width="30" height="20" rx="10"/><text x="15.0" y="14" text-anchor="middle">P3</text></g>
+<g class="bd bP" transform="translate(986 335)"><rect width="30" height="20" rx="10"/><text x="15.0" y="14" text-anchor="middle">P4</text></g>
+<g class="bd bP" transform="translate(986 382)"><rect width="30" height="20" rx="10"/><text x="15.0" y="14" text-anchor="middle">P5</text></g>
+<g class="bd bA" transform="translate(896 494)"><rect width="133" height="20" rx="10"/><text x="66.5" y="14" text-anchor="middle">ALMACENAMIENTO A1</text></g>
+<g class="bd bS" transform="translate(500 189)"><rect width="78" height="20" rx="10"/><text x="39.0" y="14" text-anchor="middle">SALIDA S1</text></g>
+<g class="bd bS" transform="translate(497 580)"><rect width="78" height="20" rx="10"/><text x="39.0" y="14" text-anchor="middle">SALIDA S2</text></g>
+<g class="bd bS" transform="translate(497 664)"><rect width="78" height="20" rx="10"/><text x="39.0" y="14" text-anchor="middle">SALIDA S3</text></g>
+<g class="bd bS" transform="translate(497 748)"><rect width="78" height="20" rx="10"/><text x="39.0" y="14" text-anchor="middle">SALIDA S4</text></g>
+</g>
+</svg>
+</div>
+</section>
+
+
+<section class="panel">
+  <h2 style="margin-bottom:4px">Entradas, procesos, almacenamiento y salidas</h2>
+  <p class="lead" style="margin-bottom:14px">Cada código corresponde a la marca de color en el diagrama.</p>
+  <div class="ipo">
+    <div class="col" style="--c:var(--e)"><h3>Entradas <small>E</small></h3>
+      <div class="it"><span class="code">E1</span><div><b>Sábana con folios GLPI</b><span>Creada según el objetivo del cliente; se sube desde OneDrive</span></div></div>
+      <div class="it"><span class="code">E2</span><div><b>Inicio de sesión</b><span>Usuario y contraseña</span></div></div>
+      <div class="it"><span class="code">E3</span><div><b>Captura del operador</b><span>Avance, estatus, fechas, Back Office, prospectos</span></div></div>
+      <div class="it"><span class="code">E4</span><div><b>Seguimiento de desviaciones</b><span>Comentario, compromiso y folio GLPI del responsable</span></div></div>
+      <div class="it"><span class="code">E5</span><div><b>Estado de tickets</b><span>Leído de GLPI y convertido a estatus PULSOTT</span></div></div></div>
+    <div class="col" style="--c:var(--p)"><h3>Procesos <small>P</small></h3>
+      <div class="it"><span class="code">P1</span><div><b>Leer y validar sábana</b><span>Agrupa por CR O ID, corrige estatus</span></div></div>
+      <div class="it"><span class="code">P2</span><div><b>Semáforo y avance</b><span>Real contra esperado a la fecha de corte</span></div></div>
+      <div class="it"><span class="code">P3</span><div><b>Desviaciones</b><span>Activa o resuelta, por área</span></div></div>
+      <div class="it"><span class="code">P4</span><div><b>API del servidor</b><span>Guarda, lee, sesiones y roles</span></div></div>
+      <div class="it"><span class="code">P5</span><div><b>Estatus GLPI</b><span>Consulta y convierte estados (solo lectura)</span></div></div></div>
+    <div class="col" style="--c:var(--a)"><h3>Almacenamiento <small>A</small></h3>
+      <div class="it"><span class="code">A1</span><div><b>MySQL pulsott</b><span>proyectos, proyectos_versiones, seguimiento_desviaciones, glpi_sincronizaciones, prospectos, fotos_personas, usuarios, bitacora, ajustes</span></div></div></div>
+    <div class="col" style="--c:var(--o)"><h3>Salidas <small>S</small></h3>
+      <div class="it"><span class="code">S1</span><div><b>Pantallas</b><span>Resumen, tablero, hoja del coordinador, desviaciones, Back Office</span></div></div>
+      <div class="it"><span class="code">S2</span><div><b>Excel descargado</b><span>Sábana con avances</span></div></div>
+      <div class="it"><span class="code">S3</span><div><b>Dashboard para cliente</b><span>Reporte de avance</span></div></div>
+      <div class="it"><span class="code">S4</span><div><b>Modo kiosko</b><span>Velocímetros en pantalla</span></div></div></div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2 style="margin-bottom:12px">Detalle de cada entrada y salida</h2>
+  <div class="tscroll"><table class="tbl">
+    <thead><tr><th>Código</th><th>Qué es</th><th>Origen → destino</th><th>Formato / tecnología</th><th>Quién</th></tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="5">Entradas</td></tr>
+      <tr><td>E1</td><td>Sábana Lectoras_Actualizacion con folios GLPI ya capturados (pasos 1 a 5 del origen)</td><td>OneDrive → navegador (PULSOTT.html)</td><td>.xlsx, hojas BASE DE DATOS TT y DATOS DEL PROYECTO</td><td>Operador, Administrador</td></tr>
+      <tr><td>E2</td><td>Inicio de sesión</td><td>Navegador → api/index.php</td><td>HTTP · JSON; el servidor asigna el rol</td><td>Todos</td></tr>
+      <tr><td>E3</td><td>Captura de avance, estatus, reprogramación, motivo, área, costos, gastos y prospectos</td><td>Navegador → api/index.php → MySQL</td><td>Formularios del tablero · HTTP · JSON</td><td>Operador, Administrador</td></tr>
+      <tr><td>E4</td><td>Seguimiento de desviaciones: comentario, dependencias, compromiso y folio GLPI</td><td>Navegador → MySQL (seguimiento_desviaciones)</td><td>Formulario · HTTP · JSON</td><td>Responsable de área</td></tr>
+      <tr><td>E5</td><td>Estado de cada ticket</td><td>GLPI → app/glpi.php → navegador</td><td>API REST · HTTPS · solo lectura; se convierte con la tabla de equivalencias</td><td>Operador (botón Estatus GLPI)</td></tr>
+      <tr class="grp"><td colspan="5">Salidas</td></tr>
+      <tr><td>S1</td><td>Pantallas de consulta</td><td>MySQL → api/index.php → navegador</td><td>HTML + JavaScript</td><td>Todos</td></tr>
+      <tr><td>S2</td><td>Excel con avances</td><td>Navegador → equipo del usuario</td><td>.xlsx descargado</td><td>Todos (Consulta incluido)</td></tr>
+      <tr><td>S3</td><td>Dashboard para cliente</td><td>Navegador → cliente</td><td>Archivo .html</td><td>Operador, Administrador</td></tr>
+      <tr><td>S4</td><td>Modo kiosko</td><td>Navegador → pantalla de monitoreo</td><td>Velocímetros en rotación</td><td>Cualquier rol</td></tr>
+    </tbody></table></div>
+</section>
+
+<section class="panel">
+  <h2 style="margin-bottom:12px">Simbología</h2>
+  <div class="legend">
+    <div class="lg"><svg viewBox="0 0 48 48"><use href="#ic-user"/></svg><div><b>Usuario</b><span>Persona con rol asignado</span></div></div>
+    <div class="lg"><svg viewBox="0 0 120 76"><use href="#ic-cloud"/></svg><div><b>Nube</b><span>OneDrive, donde vive la sábana</span></div></div>
+    <div class="lg"><svg viewBox="0 0 70 110"><use href="#ic-srv"/></svg><div><b>Servidor propio</b><span>XAMPP local: Apache y PHP</span></div></div>
+    <div class="lg"><svg viewBox="0 0 90 110"><use href="#ic-db"/></svg><div><b>Base de datos</b><span>MySQL pulsott</span></div></div>
+    <div class="lg"><svg viewBox="0 0 70 110"><use href="#ic-extsrv"/></svg><div><b>Servidor externo</b><span>GLPI, fuera de PULSOTT</span></div></div>
+    <div class="lg"><svg viewBox="0 0 40 46"><use href="#ic-lock"/></svg><div><b>Credenciales</b><span>Archivo .env: contraseñas y tokens</span></div></div>
+    <div class="lg"><svg viewBox="0 0 40 50"><use href="#ic-xlsx"/></svg><div><b>Archivo</b><span>Excel, HTML o PHP</span></div></div>
+    <div class="lg"><svg viewBox="0 0 60 40"><use href="#ic-ticket"/></svg><div><b>Ticket</b><span>Folio GLPI de cada lectora</span></div></div>
+  </div>
+  <div class="legend" style="margin-top:16px">
+    <div class="lg"><svg viewBox="0 0 34 20"><rect width="34" height="20" rx="10" fill="var(--e)"/></svg><div><b>E · Entrada</b><span>Información que llega</span></div></div>
+    <div class="lg"><svg viewBox="0 0 34 20"><rect width="34" height="20" rx="10" fill="var(--p)"/></svg><div><b>P · Proceso</b><span>Lo que hace el sistema</span></div></div>
+    <div class="lg"><svg viewBox="0 0 34 20"><rect width="34" height="20" rx="10" fill="var(--a)"/></svg><div><b>A · Almacenamiento</b><span>Dónde se guarda</span></div></div>
+    <div class="lg"><svg viewBox="0 0 34 20"><rect width="34" height="20" rx="10" fill="var(--o)"/></svg><div><b>S · Salida</b><span>Lo que entrega</span></div></div>
+  </div>
+  <div class="legend" style="margin-top:16px">
+    <div class="lg"><svg viewBox="0 0 44 12"><path d="M2 6h34" stroke="var(--xl)" stroke-width="2.4"/><path d="M34 1l8 5-8 5z" fill="var(--xl)"/></svg><div><b>Carga de la sábana</b><span>Excel → navegador</span></div></div>
+    <div class="lg"><svg viewBox="0 0 44 12"><path d="M2 6h34" stroke="var(--accent)" stroke-width="2.4"/><path d="M34 1l8 5-8 5z" fill="var(--accent)"/></svg><div><b>HTTP / JSON</b><span>Navegador ↔ servidor</span></div></div>
+    <div class="lg"><svg viewBox="0 0 44 12"><path d="M2 6h34" stroke="var(--db)" stroke-width="2.4"/><path d="M34 1l8 5-8 5z" fill="var(--db)"/></svg><div><b>PDO · 3306</b><span>PHP ↔ MySQL</span></div></div>
+    <div class="lg"><svg viewBox="0 0 44 12"><path d="M2 6h34" stroke="var(--ext)" stroke-width="2.4"/><path d="M34 1l8 5-8 5z" fill="var(--ext)"/></svg><div><b>API REST · HTTPS</b><span>PHP ↔ GLPI</span></div></div>
+  </div>
+</section>
+
+<footer>Estado al 17 de noviembre de 2026. Servidor XAMPP local (Apache + PHP 8.5 + MySQL) en http://localhost/PULSOTT/. Credenciales en .env (fuera del navegador). GLPI conectado en solo lectura: no se solicita ningún cambio en GLPI.</footer>
+</div>
+
+</body>
+</html>

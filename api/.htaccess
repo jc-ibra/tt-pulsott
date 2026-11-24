@@ -1,0 +1,4 @@
+# Todas las rutas api/... las atiende index.php (por ejemplo api/proyectos/abc123)
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php?ruta=$1 [B,QSA,L]

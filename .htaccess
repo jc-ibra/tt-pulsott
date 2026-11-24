@@ -1,0 +1,19 @@
+# La entrada es index.php: pide iniciar sesión antes de mostrar el sistema
+DirectoryIndex index.php
+Options -Indexes
+
+# Nada de lo siguiente se puede abrir desde el navegador
+<FilesMatch "\.(html?|md|sql|bak|ini|log|sh|bat|ps1)$">
+    Require all denied
+</FilesMatch>
+RedirectMatch 404 "/(app|config|database|respaldo)(/|$)"
+RedirectMatch 404 "/\."
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "same-origin"
+</IfModule>
